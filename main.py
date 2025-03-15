@@ -1,7 +1,7 @@
 import pymongo
 import streamlit as st
 from dotenv import load_dotenv
-
+import pandas as pd  # Import Pandas for DataFrame
 load_dotenv()
 
 
@@ -93,17 +93,45 @@ elif option == "Search Book 🏸":
             st.error("❌ No books found!")
 
 
+# elif option == "All Books 📚":
+#     # Display all books
+#     st.header("All Books")
+#     books = list(collection.find())  # Convert cursor to list
+    
+#     if books:  # Check if list is not empty
+#         for book in books:
+#             st.write(f"📖 {book.get('title', 'Unknown')} by {book.get('author', 'Unknown')} ({book.get('year', 'N/A')}) - {book.get('genre', 'Unknown')} - {'✅ Read' if book.get('read') else '❌ Not Read'} ")
+#     else:
+#         st.warning("📭 No books found in the library.")
+
+
+
 elif option == "All Books 📚":
     # Display all books
     st.header("All Books")
-    books = list(collection.find())  # Convert cursor to list
-    
-    if books:  # Check if list is not empty
-        for book in books:
-            st.write(f"📖 {book.get('title', 'Unknown')} by {book.get('author', 'Unknown')} ({book.get('year', 'N/A')}) - {book.get('genre', 'Unknown')} - {'✅ Read' if book.get('read') else '❌ Not Read'} ")
+    books = list(collection.find({}, {"_id": 0, "added_by": 0}))  # Exclude "_id" and "added_by"
+
+    if books:
+        # Convert books list to DataFrame
+        df = pd.DataFrame(books)
+
+        # Rename columns for better readability
+        df.rename(columns={
+            "title": "Title",
+            "author": "Author",
+            "year": "Year",
+            "genre": "Genre",
+            "read": "Read Status"
+        }, inplace=True)
+
+        # Convert Read Status to readable format
+        df["Read Status"] = df["Read Status"].apply(lambda x: "✅ Yes" if x else "❌ No")
+
+        # Display the DataFrame as a table
+        st.dataframe(df, use_container_width=True)
+
     else:
         st.warning("📭 No books found in the library.")
-
 
 elif option == "Library Statistics 📊":
     # Display statistics
